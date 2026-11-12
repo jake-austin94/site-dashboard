@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Website Numbers</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
+<style>
+  /* Layout: a stack of plain panels. Summary first, then the chart,
+     then where people came from, then the enquiries themselves. */
+  :root {
+    --bg: #F7F9FB;
+    --panel: #FFFFFF;
+    --ink: #10202F;
+    --muted: #5C6E80;
+    --faint: #8699AA;
+    --line: #DFE7EE;
+    --accent: #1F5FA8;
+    --accent-soft: #E7F0F9;
+    --good: #16794C;
+    --warn: #9A5B00;
+    --shadow: 0 1px 2px rgba(16, 32, 47, .06), 0 8px 24px -16px rgba(16, 32, 47, .3);
+    color-scheme: light;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #0C141C; --panel: #131F2A; --ink: #E8F0F7; --muted: #9DB0C2;
+      --faint: #70869A; --line: #233442; --accent: #5AA0E8; --accent-soft: #1A2E42;
+      --good: #4BCF93; --warn: #E0A64A;
+      --shadow: 0 1px 2px rgba(0,0,0,.4), 0 8px 24px -16px rgba(0,0,0,.8);
+      color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #0C141C; --panel: #131F2A; --ink: #E8F0F7; --muted: #9DB0C2;
+    --faint: #70869A; --line: #233442; --accent: #5AA0E8; --accent-soft: #1A2E42;
+    --good: #4BCF93; --warn: #E0A64A;
+    --shadow: 0 1px 2px rgba(0,0,0,.4), 0 8px 24px -16px rgba(0,0,0,.8);
+    color-scheme: dark;
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font: 400 15px/1.55 Inter, system-ui, -apple-system, "Segoe UI", sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap {
+    max-width: 1060px;
+    margin: 0 auto;
+    padding-left: max(16px, env(safe-area-inset-left, 0px));
+    padding-right: max(16px, env(safe-area-inset-right, 0px));
+    padding-block: 1.75rem 3rem;
+  }
+
+  header.top { display: flex; align-items: flex-end; justify-content: space-between; gap: 1rem 1.5rem; flex-wrap: wrap; margin-bottom: 1.5rem; }
+  h1 { font-size: clamp(1.35rem, 3.4vw, 1.75rem); font-weight: 700; letter-spacing: -.02em; margin: 0 0 .15rem; }
+  .domain { color: var(--muted); font-size: .9rem; margin: 0; }
+
+  .ranges { display: flex; gap: .3rem; background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: .25rem; }
+  .ranges button {
+    appearance: none; border: 0; background: transparent; color: var(--muted);
+    font: 600 .84rem/1 Inter, sans-serif; padding: .5rem .8rem; border-radius: 7px; cursor: pointer;
+  }
+  .ranges button[aria-pressed="true"] { background: var(--accent); color: #fff; }
+  .ranges button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  .tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: .75rem; margin-bottom: 1.25rem; }
+  .tile { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 1rem 1.1rem; box-shadow: var(--shadow); min-width: 0; }
+  .tile .label { font-size: .76rem; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; color: var(--faint); margin-bottom: .35rem; }
+  .tile .value { font-size: clamp(1.6rem, 4.5vw, 2.1rem); font-weight: 700; letter-spacing: -.02em; font-variant-numeric: tabular-nums; line-height: 1.1; }
+  .tile .sub { font-size: .82rem; color: var(--muted); margin-top: .2rem; }
+  .tile.lead .value { color: var(--accent); }
+
+  .panel { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 1.1rem 1.2rem 1.25rem; box-shadow: var(--shadow); margin-bottom: 1.25rem; min-width: 0; }
+  .panel h2 { font-size: .95rem; font-weight: 700; margin: 0 0 .1rem; letter-spacing: -.01em; }
+  .panel .hint { font-size: .82rem; color: var(--muted); margin: 0 0 1rem; }
+
+  .chart-scroll { overflow-x: auto; }
+  svg.chart { display: block; width: 100%; min-width: 320px; height: 190px; }
+  .legend { display: flex; gap: 1rem; flex-wrap: wrap; font-size: .8rem; color: var(--muted); margin-top: .6rem; }
+  .legend i { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: .35rem; vertical-align: -1px; }
+
+  .cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 1.25rem; align-items: start; }
+
+  .bars { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: .55rem; }
+  .bars li { display: grid; grid-template-columns: 1fr auto; gap: .2rem .75rem; align-items: baseline; min-width: 0; }
+  .bars .name { font-size: .88rem; overflow-wrap: anywhere; min-width: 0; }
+  .bars .n { font-size: .88rem; font-weight: 600; font-variant-numeric: tabular-nums; color: var(--muted); }
+  .bars .track { grid-column: 1 / -1; height: 5px; border-radius: 3px; background: var(--accent-soft); overflow: hidden; }
+  .bars .fill { display: block; height: 100%; background: var(--accent); border-radius: 3px; }
+
+  table { width: 100%; border-collapse: collapse; font-size: .88rem; }
+  th { text-align: left; font-size: .74rem; text-transform: uppercase; letter-spacing: .04em; color: var(--faint); font-weight: 600; padding: 0 .7rem .5rem 0; white-space: nowrap; }
+  td { padding: .7rem .7rem .7rem 0; border-top: 1px solid var(--line); vertical-align: top; }
+  td:last-child, th:last-child { padding-right: 0; }
+  .who { font-weight: 600; }
+  .contact a { color: var(--accent); text-decoration: none; }
+  .contact a:hover { text-decoration: underline; }
+  .chip { display: inline-block; font-size: .72rem; font-weight: 600; padding: .18rem .5rem; border-radius: 999px; background: var(--accent-soft); color: var(--accent); white-space: nowrap; }
+  .msg { color: var(--muted); font-size: .84rem; margin-top: .25rem; overflow-wrap: anywhere; }
+
+  .empty { color: var(--muted); font-size: .9rem; padding: .4rem 0 .2rem; }
+  .note { font-size: .8rem; color: var(--faint); margin-top: 1.5rem; line-height: 1.5; }
+  .error { background: var(--panel); border: 1px solid var(--line); border-left: 4px solid var(--warn); border-radius: 10px; padding: 1.1rem 1.2rem; }
+  .error h2 { margin: 0 0 .4rem; font-size: 1rem; }
+  .error p { margin: 0 0 .5rem; color: var(--muted); font-size: .9rem; }
+  @media (prefers-reduced-motion: no-preference) { .fill, .bar { transition: all .3s ease; } }
+</style>
+</head>
+<body>
+<div class="wrap" id="app">
+  <p class="empty">Loading your numbers…</p>
+</div>
+
+<script>
+(function () {
+  "use strict";
+  var API = "https://lkfriflskqyvwaknzbet.supabase.co/functions/v1/stats";
+  var app = document.getElementById("app");
+  var params = new URLSearchParams(location.search);
+  var token = params.get("token") || "";
+  var days = Number(params.get("days")) || 30;
+
+  function esc(s) {
+    return String(s == null ? "" : s)
+      .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+  }
+  function fmtDate(iso) {
+    var d = new Date(iso);
+    return d.toLocaleDateString("en-GB", { day: "numeric", month: "short" });
+  }
+  function fmtWhen(iso) {
+    var d = new Date(iso);
+    return d.toLocaleString("en-GB", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
+  }
+  function actionLabel(n) {
+    return { call_click: "Tapped call", whatsapp_click: "Tapped WhatsApp", email_click: "Tapped email",
+             cookie_choice: "Cookie choice" }[n] || n;
+  }
+
+  function fail(title, body) {
+    app.innerHTML = '<div class="error"><h2>' + esc(title) + "</h2><p>" + body + "</p></div>";
+  }
+
+  if (!token) {
+    fail("This link is missing its key",
+      "Each business has its own link. Ask Jake for yours, then open that one and bookmark it.");
+    return;
+  }
+
+  fetch(API + "?token=" + encodeURIComponent(token) + "&days=" + days)
+    .then(function (r) { return r.json(); })
+    .then(function (d) {
+      if (!d.ok) throw new Error(d.error || "Could not load");
+      render(d);
+    })
+    .catch(function (e) {
+      fail("Could not load your numbers",
+        "The link may be wrong, or the connection dropped. Try again in a moment. " +
+        '<br><span style="color:var(--faint)">' + esc(e.message || "") + "</span>");
+    });
+
+  function bars(items, total) {
+    if (!items.length) return '<p class="empty">Nothing yet.</p>';
+    var max = Math.max.apply(null, items.map(function (i) { return i.count; }));
+    return '<ul class="bars">' + items.slice(0, 7).map(function (i) {
+      var pct = max ? Math.round((i.count / max) * 100) : 0;
+      var share = total ? Math.round((i.count / total) * 100) : 0;
+      return "<li><span class=\"name\">" + esc(i.name) + "</span>" +
+        '<span class="n">' + i.count + (total ? " · " + share + "%" : "") + "</span>" +
+        '<span class="track"><span class="fill" style="width:' + pct + '%"></span></span></li>';
+    }).join("") + "</ul>";
+  }
+
+  function chart(series) {
+    var W = 820, H = 190, padL = 34, padR = 10, padT = 14, padB = 26;
+    var iw = W - padL - padR, ih = H - padT - padB;
+    var max = Math.max(1, Math.max.apply(null, series.map(function (s) { return s.visitors; })));
+    // Round the top up to something readable rather than an arbitrary peak.
+    var step = max <= 5 ? 1 : max <= 20 ? 5 : max <= 50 ? 10 : max <= 200 ? 25 : 100;
+    var top = Math.ceil(max / step) * step;
+    var bw = iw / series.length;
+    var gap = Math.min(5, bw * 0.25);
+
+    var grid = "", ticks = [0, top / 2, top];
+    ticks.forEach(function (t) {
+      var y = padT + ih - (t / top) * ih;
+      grid += '<line x1="' + padL + '" y1="' + y + '" x2="' + (W - padR) + '" y2="' + y +
+        '" stroke="var(--line)" stroke-width="1"/>' +
+        '<text x="' + (padL - 7) + '" y="' + (y + 4) + '" text-anchor="end" font-size="11" fill="var(--faint)">' +
+        Math.round(t) + "</text>";
+    });
+
+    var bars = "", dots = "", labels = "";
+    series.forEach(function (s, i) {
+      var x = padL + i * bw;
+      var h = (s.visitors / top) * ih;
+      bars += '<rect class="bar" x="' + (x + gap / 2) + '" y="' + (padT + ih - h) +
+        '" width="' + Math.max(1, bw - gap) + '" height="' + h + '" rx="2" fill="var(--accent)" opacity="' +
+        (s.visitors ? .85 : .18) + '"><title>' + esc(fmtDate(s.date)) + ": " + s.visitors +
+        " visitor" + (s.visitors === 1 ? "" : "s") +
+        (s.enquiries ? ", " + s.enquiries + " enquiry" + (s.enquiries === 1 ? "" : " requests") : "") +
+        "</title></rect>";
+      if (s.enquiries) {
+        dots += '<circle cx="' + (x + bw / 2) + '" cy="' + (padT + ih - h - 8) +
+          '" r="4.5" fill="var(--good)"><title>' + s.enquiries + " enquiry on " + esc(fmtDate(s.date)) +
+          "</title></circle>";
+      }
+      var every = series.length > 40 ? 7 : series.length > 14 ? 3 : 1;
+      if (i % every === 0 || i === series.length - 1) {
+        labels += '<text x="' + (x + bw / 2) + '" y="' + (H - 7) +
+          '" text-anchor="middle" font-size="10" fill="var(--faint)">' + esc(fmtDate(s.date)) + "</text>";
+      }
+    });
+
+    return '<div class="chart-scroll"><svg class="chart" viewBox="0 0 ' + W + " " + H +
+      '" preserveAspectRatio="none" role="img" aria-label="Daily visitors">' +
+      grid + bars + dots + labels + "</svg></div>" +
+      '<div class="legend"><span><i style="background:var(--accent)"></i>Visitors</span>' +
+      '<span><i style="background:var(--good);border-radius:50%"></i>Quote request</span></div>';
+  }
+
+  function enquiryRows(list) {
+    if (!list.length) {
+      return '<p class="empty">No quote requests in this period. They will appear here the moment one comes in.</p>';
+    }
+    return "<table><thead><tr><th>When</th><th>Who</th><th>Wants</th><th>Found you via</th></tr></thead><tbody>" +
+      list.map(function (e) {
+        return "<tr><td style=\"white-space:nowrap;color:var(--muted)\">" + esc(fmtWhen(e.created_at)) + "</td>" +
+          '<td><span class="who">' + esc(e.name || "—") + "</span>" +
+          '<div class="contact">' +
+          (e.phone ? '<a href="tel:' + esc(e.phone.replace(/\s/g, "")) + '">' + esc(e.phone) + "</a>" : "") +
+          (e.email ? '<br><a href="mailto:' + esc(e.email) + '">' + esc(e.email) + "</a>" : "") +
+          (e.postcode ? '<br><span style="color:var(--faint)">' + esc(e.postcode) + "</span>" : "") +
+          "</div></td>" +
+          "<td>" + esc(e.services || "—") +
+          (e.frequency ? '<div class="msg">' + esc(e.frequency) + "</div>" : "") +
+          (e.message ? '<div class="msg">' + esc(e.message) + "</div>" : "") + "</td>" +
+          '<td><span class="chip">' + esc(e.channel || "Direct") + "</span>" +
+          (e.utm_campaign ? '<div class="msg">' + esc(e.utm_campaign) + "</div>" : "") + "</td></tr>";
+      }).join("") + "</tbody></table>";
+  }
+
+  function render(d) {
+    var t = d.totals;
+    var rate = t.visitors ? Math.round((t.enquiries / t.visitors) * 1000) / 10 : 0;
+    var label = d.range.days === 7 ? "last 7 days" : d.range.days === 90 ? "last 90 days" : "last 30 days";
+
+    app.innerHTML =
+      '<header class="top"><div><h1>' + esc(d.site.name) + "</h1>" +
+      '<p class="domain">' + esc(d.site.domain) + " · " + label + "</p></div>" +
+      '<div class="ranges" role="group" aria-label="Time period">' +
+      [7, 30, 90].map(function (n) {
+        return '<button type="button" data-days="' + n + '" aria-pressed="' + (n === d.range.days) + '">' +
+          n + " days</button>";
+      }).join("") + "</div></header>" +
+
+      '<div class="tiles">' +
+      '<div class="tile lead"><div class="label">Quote requests</div><div class="value">' + t.enquiries +
+      '</div><div class="sub">' + rate + "% of visitors asked</div></div>" +
+      '<div class="tile"><div class="label">Visitors</div><div class="value">' + t.visitors +
+      '</div><div class="sub">' + t.pageviews + " page views</div></div>" +
+      '<div class="tile"><div class="label">Today</div><div class="value">' + d.today.visitors +
+      '</div><div class="sub">' + d.today.enquiries + " quote request" + (d.today.enquiries === 1 ? "" : "s") +
+      "</div></div>" +
+      '<div class="tile"><div class="label">Read on</div><div class="value">' +
+      (t.visitors ? Math.round(((t.visitors - t.bounced) / t.visitors) * 100) : 0) +
+      '%</div><div class="sub">looked past the first page</div></div>' +
+      "</div>" +
+
+      '<section class="panel"><h2>Day by day</h2>' +
+      '<p class="hint">Each bar is a day. A green dot marks a day someone asked for a quote.</p>' +
+      chart(d.series) + "</section>" +
+
+      '<div class="cols">' +
+      '<section class="panel"><h2>How they found you</h2>' +
+      '<p class="hint">Where visitors came from before landing on the site.</p>' +
+      bars(d.channels, t.visitors) + "</section>" +
+      '<section class="panel"><h2>What they did</h2>' +
+      '<p class="hint">Taps on the call, WhatsApp and email buttons.</p>' +
+      bars(d.actions.map(function (a) { return { name: actionLabel(a.name), count: a.count }; }), 0) +
+      "</section>" +
+      '<section class="panel"><h2>Most read pages</h2>' +
+      '<p class="hint">By page views.</p>' +
+      bars(d.pages.map(function (p) { return { name: p.path, count: p.views }; }), 0) + "</section>" +
+      '<section class="panel"><h2>Phone, tablet or computer</h2>' +
+      '<p class="hint">What visitors were using.</p>' +
+      bars(d.devices, t.visitors) + "</section>" +
+      "</div>" +
+
+      '<section class="panel"><h2>Quote requests</h2>' +
+      '<p class="hint">Everyone who filled in the form, newest first, and what brought them in.</p>' +
+      enquiryRows(d.enquiries) + "</section>" +
+
+      '<p class="note">Visits are counted without cookies: nobody is followed around the internet, ' +
+      "and no one's address is stored. Numbers cover " + label +
+      ", up to " + esc(fmtWhen(new Date().toISOString())) + ".</p>";
+
+    app.querySelectorAll("[data-days]").forEach(function (b) {
+      b.addEventListener("click", function () {
+        var n = b.getAttribute("data-days");
+        location.search = "?token=" + encodeURIComponent(token) + "&days=" + n;
+      });
+    });
+  }
+})();
+</script>
+</body>
+</html>
