@@ -131,13 +131,16 @@
     return String(s == null ? "" : s)
       .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
   }
+  // Always UK time: these are UK businesses, and the viewer may be anywhere.
   function fmtDate(iso) {
-    var d = new Date(iso);
-    return d.toLocaleDateString("en-GB", { day: "numeric", month: "short" });
+    var d = new Date(iso.length === 10 ? iso + "T12:00:00Z" : iso);
+    return d.toLocaleDateString("en-GB", { timeZone: "Europe/London", day: "numeric", month: "short" });
   }
   function fmtWhen(iso) {
     var d = new Date(iso);
-    return d.toLocaleString("en-GB", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
+    return d.toLocaleString("en-GB", {
+      timeZone: "Europe/London", day: "numeric", month: "short", hour: "2-digit", minute: "2-digit"
+    });
   }
   function actionLabel(n) {
     return { call_click: "Tapped call", whatsapp_click: "Tapped WhatsApp", email_click: "Tapped email",
